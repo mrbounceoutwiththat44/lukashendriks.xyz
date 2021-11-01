@@ -25,7 +25,7 @@ article {
 
 @font-face {
     font-family: FONT;
-    src: url(./fonts/Diatype.woff2);
+    src: url(/fonts/Diatype.woff2);
 }
 
 h1 {
