@@ -1,0 +1,55 @@
+---
+title: Other
+---
+
+<h1> {{title}} </h1>
+
+
+
+<script>
+  document.getElementById("test").style.display = "none";
+</script>
+{% include "nav3.njk" %}
+
+<div class="backgroundImg3"></div>
+
+<h3>Coalesce</h3>
+<h4>2020</h4>
+
+{% for i in range(1, 2) %}
+  <div class="cssbox">
+    <a id="OT{{i}}" href="#OT{{i}}"><img class="cssbox_thumb" src="/images/OT/OT{{i}}.png"/>
+      <span class="cssbox_full"><img src="/images/OT/OT{{i}}.png"/></span>
+    </a>
+    <a class="cssbox_close" href="#void"></a>
+
+    {% if i > 1 %}
+      <a class="cssbox_prev" href="#OT{{i-1}}">&lt;</a>
+    {% endif %}
+
+    {% if i < 5 %}
+      <a class="cssbox_next" href="#OT{{i+1}}">&gt;</a>
+    {% endif %}
+  </div>
+{% endfor %}
+
+{# 
+<h3>Brand Identity</h3>
+<h4>2019</h4>
+{% for i in range(1, 3) %}
+  <div class="cssbox">
+    <a id="BR{{i}}" href="#BR{{i}}"><img class="cssbox_thumb" src="/images/BR/BR{{i}}.png"/>
+      <span class="cssbox_full"><img src="/images/BR/BR{{i}}.png"/></span>
+    </a>
+    <a class="cssbox_close" href="#void"></a>
+
+    {% if i > 1 %}
+      <a class="cssbox_prev" href="#BR{{i-1}}">&lt;</a>
+    {% endif %}
+
+    {% if i < 5 %}
+      <a class="cssbox_next" href="#BR{{i+1}}">&gt;</a>
+    {% endif %}
+  </div>
+{% endfor %} #}
+

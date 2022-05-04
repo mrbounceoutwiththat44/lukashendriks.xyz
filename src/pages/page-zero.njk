@@ -1,0 +1,28 @@
+---
+title: Works
+---
+
+<h1> {{MANEEEEE}} </h1>
+
+
+<h2><a href="/">home</a></h2>
+
+{% for i in range(1, 24) %}
+  <div class="cssbox">
+    <a id="30{{i}}" href="#30{{i}}"><img class="cssbox_thumb" src="/images/30/30{{i}}.png"/>
+      <span class="cssbox_full"><img src="/images/30/30{{i}}.png"/></span>
+    </a>
+    <a class="cssbox_close" href="#void"></a>
+
+    {% if i > 1 %}
+      <a class="cssbox_prev" href="#30{{i-1}}">&lt;</a>
+    {% endif %}
+
+    {% if i < 23 %}
+      <a class="cssbox_next" href="#30{{i+1}}">&gt;</a>
+    {% endif %}
+  </div>
+{% endfor %}
+
+<script src="{{ '/js/lCursor.js' | url }}"></script>
+<script src="{{ '/js/china.js' | url }}></script>

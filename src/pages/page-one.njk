@@ -1,0 +1,78 @@
+---
+title: Photo
+---
+
+
+
+<script>
+  document.getElementById("test").style.display = "none";
+</script>
+
+<div class="backgroundImg"></div>
+<div class="navbar3"></div>
+<h1>{{title}}</h1>
+{% include "nav.njk" %}
+
+
+{# <a href="/">home</a> #}
+{# <div class="grid cssbox">
+{% for i in range(1, 48) %}
+ <a id="image{{i}}" href="#image{{i}}">
+    <img class="portfolioImg" src="/images/Enniscorthy/Enniscorthy{{i}}.jpg">
+  </a>
+{% endfor %}
+        <a class="cssbox_close" href="#void"></a>
+    <a class="cssbox_prev" href="#image1">&lt;</a>
+    <a class="cssbox_next" href="#image3">&gt;</a>
+</div> #}
+
+{# <div class="cssbox">
+    <a id="image2" href="#image2">
+        <img class="cssbox_thumb" src="/images/Enniscorthy/Enniscorthy2.jpg" />
+        <span class="cssbox_full">
+            <img src="/images/Enniscorthy/Enniscorthy2.jpg" />
+        </span>
+    </a>
+    <a class="cssbox_close" href="#void"></a>
+    <a class="cssbox_prev" href="#image1">&lt;</a>
+    <a class="cssbox_next" href="#image3">&gt;</a>
+</div> #}
+
+<h3>Brothers </h3>
+<h4>2022</h4>
+{% for i in range(1, 8) %}
+  <div class="cssbox">
+    <a id="FN{{i}}" href="#FN{{i}}"><img class="cssbox_thumb" src="/images/FN/FN{{i}}.jpg"/>
+      <span class="cssbox_full"><img src="/images/FN/FN{{i}}.jpg"/></span>
+    </a>
+    <a class="cssbox_close" href="#void"></a>
+
+    {% if i > 1 %}
+      <a class="cssbox_prev" href="#FN{{i-1}}">&lt;</a>
+    {% endif %}
+
+    {% if i < 22 %}
+      <a class="cssbox_next" href="#FN{{i+1}}">&gt;</a>
+    {% endif %}
+  </div>
+{% endfor %}
+
+<h3>Enniscorthy</h3>
+<h4>2021</h4>
+
+{% for i in range(1, 25) %}
+  <div class="cssbox">
+    <a id="Enniscorthy{{i}}" href="#Enniscorthy{{i}}"><img class="cssbox_thumb" src="/images/Enniscorthy/Enniscorthy{{i}}.jpg"/>
+      <span class="cssbox_full"><img src="/images/Enniscorthy/Enniscorthy{{i}}.jpg"/></span>
+    </a>
+    <a class="cssbox_close" href="#void"></a>
+
+    {% if i > 1 %}
+      <a class="cssbox_prev" href="#Enniscorthy{{i-1}}">&lt;</a>
+    {% endif %}
+
+    {% if i < 22 %}
+      <a class="cssbox_next" href="#Enniscorthy{{i+1}}">&gt;</a>
+    {% endif %}
+  </div>
+{% endfor %}

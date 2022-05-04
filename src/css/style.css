@@ -5,6 +5,13 @@ body {
     font-family: FONT, Times, serif;
 }
 
+.navbar {
+    z-index: 1000;
+    position: absolute;
+    top: 50px;
+    display: none;
+}
+
 canvas {
     display: block;
     z-index: 1;
@@ -14,13 +21,44 @@ canvas {
     padding: 40px;
 }
 
+.container2 {
+    padding-left: 100px;
+    padding-top: 150px;
+}
+
 article {
     position: absolute;
     z-index: 10;
+    width: 100vw;
 }
 
+.backgroundImg {
+    position: fixed;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    /* background: blue; */
+   background-image: url(/images/tv.jpg);
+    background-size: cover;
+    height: 100vh;
+    width: 100vw;
+    background-position-x: center;
+}
+
+.backgroundImg3 {
+    position: fixed;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    /* background: blue; */
+   background-image: url(/images/backgroundImg3.jpg);
+    background-size: cover;
+    height: 100vh;
+    width: 100vw;
+}
 .portfolioImg {
     width: 300px;
+    height: 500px;
 }
 
 @font-face {
@@ -31,8 +69,26 @@ article {
 h1 {
     font-size: 100px;
     letter-spacing: 3px;
+    position:relative;
+    left: 30px;
+    filter: blur(4px);
 }
-
+h2 {
+    font-size: 19px;
+    position: relative;
+    top: -54px;
+    left: 510px;
+}
+h3 {
+    font-size: 30px;
+    position:relative;
+    left: 40px;
+}
+h4 {
+    font-size: 15px;
+    position:relative;
+    left: 40px;
+}
 .wrapper {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -40,36 +96,276 @@ h1 {
     grid-auto-rows: minmax(100px, auto);
 }
 
-.one {
-    grid-column: 1 / 2;
-    grid-row: 1;
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-gap: 20px;
+    align-items: stretch;
 }
 
-.rotate90 {
-    transform: rotateY(180deg);
+.grid img {
+    border: 50px;
+    max-width: 100%;
+    width: 100vw;
 }
 
-.two {
-    grid-column: 2 / 4;
-    grid-row: 1 / 3;
+.portfolioImg {
+    width: 300px;
 }
 
-.three {
-    grid-column: 1;
-    grid-row: 2 / 5;
+div.cssbox {
+    display: inline-block;
+    margin-left: 40px;
+    padding-top: 30px;
 }
 
-.four {
-    grid-column: 3;
-    grid-row: 3;
+span.cssbox_full {
+    z-index: 999999;
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    top: 0;
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    cursor: default;
+    /* transition: opacity 0.5s linear; */
 }
 
-.five {
-    grid-column: 2;
-    grid-row: 4;
+span.cssbox_full img {
+    position: fixed;
+    background-color: white;
+    margin: 0;
+    padding: 0;
+    max-height: 90%;
+    max-width: 90%;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 20px black;
 }
 
-.six {
-    grid-column: 3;
-    grid-row: 4;
+a.cssbox_close,
+a.cssbox_prev,
+a.cssbox_next {
+    z-index: 999999;
+    position: fixed;
+    text-decoration: none;
+    visibility: hidden;
+    color: white;
+    font-size: 36px;
 }
+
+a.cssbox_close {
+    top: 1%;
+    right: 1%
+}
+
+a.cssbox_close::after {
+    content: '\00d7';
+}
+
+a.cssbox_prev,
+a.cssbox_next {
+    top: 50%;
+    transform: translate(0%, -50%);
+}
+
+a.cssbox_prev {
+    left: 5%;
+}
+
+a.cssbox_next {
+    right: 5%;
+}
+
+a:target~a.cssbox_close,
+a:target~a.cssbox_prev,
+a:target~a.cssbox_next {
+    visibility: visible;
+}
+
+a:target>img.cssbox_thumb+span.cssbox_full {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: initial;
+}
+
+.cssbox_thumb {
+    width: 300px;
+}
+
+.horizontalBar {
+    position: absolute;
+    top: 25px;
+    left: 0px;
+    display: flex;
+    width: 100%;
+    flex: 1;
+    justify-content: space-evenly;
+}
+
+
+.pageZero {
+    filter: blur(5px);
+    color: black;
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    left: 0;
+
+}
+
+.pageZero a {
+    color: black;
+    text-decoration: none;
+    position: absolute;
+}
+
+.sideBar{
+    position: relative;
+    /* background: white; */
+    top: 0;
+    /* height: 100vh; */
+    left: 0;
+    margin-right: 100px;
+    padding-top: 20px;
+    z-index: 9999;
+    text-align: right;
+    font-size: 30px;
+    line-height: 100px;
+}
+
+.sideBar a{
+    left: 0;
+    text-decoration: none;
+    color: white;
+    margin-top: 100px;
+    margin-bottom: 100px;
+    line-height: 3rem;
+    text-decoration: underline;
+    z-index: 9999;
+    
+}
+
+.img {
+    background-image: url(images/backGroundIndex.jpg);
+}
+
+.navbar {
+    z-index: 0;
+    position: absolute;
+    top: 10px;
+    left: 235px;
+}
+
+.backgroundImg2 {
+    position: fixed;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    /* background: blue; */
+   background-image: url(/images/meat.jpg);
+    background-size: cover;
+    height: 100vh;
+    width: 100vw;
+}
+.row {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    width: 500px;
+    top: 65.5px;
+    left: 500px;
+    font-size: 20px;
+    z-index: 9999;
+}
+.row a {
+    flex: 1;
+    color: black;
+}
+
+a.nav-link active {
+    color: white;
+}
+
+@media screen and (max-width: 1122px) {
+
+
+}
+
+@media screen and (max-width: 1122px) {
+
+    .sideBar {
+        font-size: 30px;
+        margin-right: 10px;
+        margin-left: 10px;
+        text-decoration: underline;
+    }
+   
+    article {
+        position: absolute;
+        width: 100%;
+        top: 0;
+        overflow:hidden;
+    }
+
+    .bg-light {
+        --bs-bg-opacity: 0;
+        background-color: white;
+        background-color: rgba(var(white),var(black))!important;
+    }
+    
+    .navbar-light .navbar-toggler {
+        color: white;
+        background-color: black;
+        border-color: white;
+        border-radius: 0.25rem;
+            border: 1px solid transparent;
+    }
+    
+    .navbar-light .navbar-nav .nav-link.active, .navbar-light .navbar-nav .show>.nav-link {
+        color: white;
+    }
+    
+    .navbar-light .navbar-nav .nav-link {
+        color: white;
+    }
+    .navbar {
+        z-index: 9999;
+        position: absolute;
+        top: 10px;
+        right: 0px;
+        width: 100px;
+        display: block;
+    }
+    .cssbox_thumb{
+        justify-items: center;
+    }
+    .mobile-nav {
+        font-size: 25px;
+        top: 10px;
+        left: 0px
+    }
+    h1 {
+        padding-top: 50px;
+    }
+    .navbar-expand {
+        color: black;
+    }
+    .row {
+        display: none;
+    }
+
+
+    /* .navbar-collapse.collapse {
+    background-color: black;
+} */
+}
+
+.navbar>.container, .navbar>.container-fluid, .navbar>.container-lg, .navbar>.container-md, .navbar>.container-sm, .navbar>.container-xl, .navbar>.container-xxl {
+    background-color: black;
+}
+

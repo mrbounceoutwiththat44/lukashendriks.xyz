@@ -12,7 +12,7 @@ module.exports = function(eleventyConfig) {
     eleventyConfig.addWatchTarget("./src/audio/");
 
     eleventyConfig.addPassthroughCopy("./src/images/");
-    eleventyConfig.addWatchTarget("./src/imgages/");
+    eleventyConfig.addWatchTarget("./src/imgaes/");
 
 
     return {

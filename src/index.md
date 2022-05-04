@@ -3,14 +3,15 @@ title: Lukas Hendriks
 layout: base.njk
 ---
 
+ 
 
 
-<header>
-    <h1>{{ title }}<h1>
-</header>
-
-{% for page in collections.pages %}
+<!-- {% for page in collections.pages %}
 - [{{ page.data.title }}]({{ page.url }})
-{%- endfor %}
+{%- endfor %} -->
+<div class="sideBar">
+    <div><a href="/pages/page-two">Design</a></div>
 
-Lukas Hendriks
+<div><a href="/pages/page-one">Photo</a></div>
+<div><a href="/pages/page-three">Other</a></div>
+<div><a href="/pages/page-CV">CV</a></div>

@@ -1,11 +1,13 @@
 let lCursor;
 let indexBackGround;
 let music;
+let gEarth;
 
 function preload() {
     lCursor = loadImage("images/TransparentL.png");
     indexBackGround = loadImage("images/backGroundIndex.jpg");
     music = createAudio('audio/song.mp3');
+    gEarth = loadImage("images/tv.jpg");
 }
 
 
