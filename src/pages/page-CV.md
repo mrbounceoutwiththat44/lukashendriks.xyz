@@ -5,46 +5,44 @@ layout: CV.njk
 
 
 
-**Lukas Hendriks**
 
 
-**EDUCATION**
+
+##### Education
 
 
-**2018-2022**
+**2018-2022**  
+**Cate School, Carpinteria, CA**   
 
-**Cate School, Carpinteria, CA**  
-**Ranked #1 California Boarding School**  
+**2022 - 2023 (Gap Year)**  
+**Nuova Accademia Di Belle Arti, Milan, IT**
 
-**2015 - 2018**
-
-**Orinda Intermediate School**  
-**Orinda, CA**  
-**Sugar Bowl Academy**  
-**Winter Terms 2015-2018**  
-**Norden, CA**
+**2023-**  
+**SMFA at Tufts, Boston, MA**
 
 
-**WORK EXPERIENCE**
+##### Work Experience
 
-**Graphic Design Assistant - GCI, Inc.**  
-**Rework Photographs for Marketing Department using Photoshop**
+**Graphic Design Assistant - GCI, Inc.**   
+**Server at Fieldhouse Restaurant, Carpinteria, CA**
 
-**SUMMER EDUCATIONAL EXPERIENCE**
+##### Summer Educational Experience
 
-**Graphic Design Program - July - August 2019**  
-**Art Center College of Design, Pasadena**  
-**Summer of Art Online - July - August 2020**  
-**Otis College of Art and Design, Los Angeles**  
-**Summer Art Program July - August 2021**  
-**Art on the Farm, Cow House Studios**  
-**Rathnure, Ireland**
+**July - August 2019**  
+**Graphic Design and Branding - Art Center College of Design, Pasadena**
 
-**HONORS AND AWARDS**
+**July - August 2020**  
+**Graphic Design - Otis College of Art and Design, Los Angeles**
+
+**July - August 2021**  
+**Art on the Farm - Cow House Studios, Rathnure, Ireland**
+
+##### Honors and Awards
 
 **Scholastic Art Awards - Silver, Gold**
 
+##### Contact
+
 **925-708-6184**  
-**lukaskhendriks@gmail.com**  
-**65 Meadow View Road, Orinda, CA 94563**
+**lukaskhendriks@gmail.com** 
 
