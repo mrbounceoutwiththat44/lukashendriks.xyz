@@ -26,20 +26,8 @@ layout: CV.njk
 **Graphic Design Assistant - GCI, Inc.**   
 **Server at Fieldhouse Restaurant, Carpinteria, CA**
 
-##### Summer Educational Experience
-
-**July - August 2019**  
-**Graphic Design and Branding - Art Center College of Design, Pasadena**
-
-**July - August 2020**  
-**Graphic Design - Otis College of Art and Design, Los Angeles**
-
-**July - August 2021**  
-**Art on the Farm - Cow House Studios, Rathnure, Ireland**
-
-##### Honors and Awards
-
-**Scholastic Art Awards - Silver, Gold**
+##### Skills
+**Proficient in Adobe Suite**
 
 ##### Contact
 
