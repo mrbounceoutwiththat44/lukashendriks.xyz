@@ -27,10 +27,11 @@ layout: CV.njk
 **Server at Fieldhouse Restaurant, Carpinteria, CA**
 
 ##### Skills
-**Proficient in Adobe Suite**
+**Proficient in Adobe Suite**  
+**Touchdesigner**
 
 ##### Contact
 
 **925-708-6184**  
-**lukaskhendriks@gmail.com** 
+**lukashendriks4@gmail.com** 
 
