@@ -13,6 +13,54 @@ title: Other
 
 <div class="backgroundImg3"></div>
 
+<h3>Pan Ops</h3>
+<h4>2023</h4>
+<div class="container3">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/iQTZOmfPN5A?si=dN3Ugc9dbiVTbFh-" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</div>
+
+
+<h3>Pavillion</h3>
+<h4>2023</h4>
+
+{% for i in range(1, 6) %}
+  <div class="cssbox">
+    <a id="Pavillion{{i}}" href="#Pavillion{{i}}"><img class="cssbox_thumb" src="/images/Pavillion/Pavillion{{i}}.jpg"/>
+      <span class="cssbox_full"><img src="/images/Pavillion/Pavillion{{i}}.jpg"/></span>
+    </a>
+    <a class="cssbox_close" href="#void"></a>
+
+    {% if i > 1 %}
+      <a class="cssbox_prev" href="#Pavillion{{i-1}}">&lt;</a>
+    {% endif %}
+
+    {% if i < 4 %}
+      <a class="cssbox_next" href="#Pavillion{{i+1}}">&gt;</a>
+    {% endif %}
+  </div>
+{% endfor %}
+
+<h3>Church</h3>
+<h4>2023</h4>
+
+{% for i in range(1, 6) %}
+  <div class="cssbox">
+    <a id="MossChurch{{i}}" href="#MossChurch{{i}}"><img class="cssbox_thumb" src="/images/MossChurch/MossChurch{{i}}.jpg"/>
+      <span class="cssbox_full"><img src="/images/MossChurch/MossChurch{{i}}.jpg"/></span>
+    </a>
+    <a class="cssbox_close" href="#void"></a>
+
+    {% if i > 1 %}
+      <a class="cssbox_prev" href="#MossChurch{{i-1}}">&lt;</a>
+    {% endif %}
+
+    {% if i < 4 %}
+      <a class="cssbox_next" href="#MossChurch{{i+1}}">&gt;</a>
+    {% endif %}
+  </div>
+{% endfor %}
+
+
 <h3>Coalesce</h3>
 <h4>2020</h4>
 

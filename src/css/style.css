@@ -26,6 +26,11 @@ canvas {
     padding-top: 150px;
 }
 
+.container3 {
+    padding-left: 40px;
+    padding-top: 30px;
+}
+
 article {
     position: absolute;
     z-index: 10;
@@ -87,14 +92,21 @@ h3 {
 }
 h4 {
     font-size: 15px;
-    position:relative;
+    position:relative;;
     left: 40px;
 }
 h5 {
     font-size: 40px;
     letter-spacing: 1px;
     left: 30px;
-  }
+}
+h6 {
+    font-size: 30px;
+    position:relative;
+    color:white;
+    left: 40px;
+    padding-top: 50px;
+}
 .wrapper {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

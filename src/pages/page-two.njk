@@ -13,6 +13,24 @@ title: Design
 
 <div class="backgroundImg2"></div>
 
+<h3>War Patterns</h3>
+<h4>2023</h4>
+{% for i in range(1, 4) %}
+  <div class="cssbox">
+    <a id="pattern{{i}}" href="#pattern{{i}}"><img class="cssbox_thumb" src="/images/Patterns/pattern{{i}}.jpg"/>
+      <span class="cssbox_full"><img src="/images/Patterns/pattern{{i}}.jpg"/></span>
+    </a>
+    <a class="cssbox_close" href="#void"></a>
+
+    {% if i > 1 %}
+      <a class="cssbox_prev" href="#pattern{{i-1}}">&lt;</a>
+    {% endif %}
+
+    {% if i < 5 %}
+      <a class="cssbox_next" href="#pattern{{i+1}}">&gt;</a>
+    {% endif %}
+  </div>
+{% endfor %}
 
 <h3>Graphic</h3>
 <h4>2019</h4>
