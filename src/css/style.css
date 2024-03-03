@@ -4,7 +4,9 @@ body {
     padding: 0;
     font-family: FONT, Times, serif;
 }
-
+p {
+    color:black;
+}
 .navbar {
     z-index: 1000;
     position: absolute;
@@ -77,23 +79,27 @@ h1 {
     position:relative;
     left: 30px;
     filter: blur(4px);
+    color: black;
 }
 h2 {
     font-size: 19px;
     position: relative;
     top: -54px;
     left: 510px;
+    color: black;
 }
 h3 {
     font-size: 30px;
     position:relative;
     left: 40px;
     padding-top: 50px;
+    color: black;
 }
 h4 {
     font-size: 15px;
     position:relative;;
     left: 40px;
+    color: black;
 }
 h5 {
     font-size: 40px;
@@ -302,7 +308,7 @@ a:target>img.cssbox_thumb+span.cssbox_full {
 }
 .row a {
     flex: 1;
-    color: black;
+    color: black;;
 }
 
 a.nav-link active {
