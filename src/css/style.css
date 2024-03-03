@@ -382,6 +382,13 @@ a.nav-link active {
     .row {
         display: none;
     }
+    .container3{
+        margin-left: 0px;
+        scale: 0.534;
+        margin-right: 294px;
+        margin-top: -56px;
+
+    }
 
 
     /* .navbar-collapse.collapse {
