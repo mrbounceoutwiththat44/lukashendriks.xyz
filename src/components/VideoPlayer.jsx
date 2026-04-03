@@ -111,10 +111,13 @@ export default function VideoPlayer({ src }) {
     e.stopPropagation();
     const v = videoRef.current;
     if (!v) return;
-    if (!document.fullscreenElement) {
-      v.requestFullscreen();
+    // iOS Safari requires webkitEnterFullscreen on the video element itself
+    if (v.webkitEnterFullscreen) {
+      v.webkitEnterFullscreen();
+    } else if (!document.fullscreenElement) {
+      v.requestFullscreen?.();
     } else {
-      document.exitFullscreen();
+      document.exitFullscreen?.();
     }
   }, []);
 
@@ -242,15 +245,15 @@ export default function VideoPlayer({ src }) {
           }} />
         </div>
 
-        {/* Timecode + mute (desktop only) */}
-        {!isMobile && (
-          <div style={{
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'space-between',
-            padding:        '5px 10px',
-            gap:            '8px',
-          }}>
+        {/* Timecode (desktop) + mute + fullscreen (both) */}
+        <div style={{
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: isMobile ? 'flex-end' : 'space-between',
+          padding:        isMobile ? '6px 10px' : '5px 10px',
+          gap:            '8px',
+        }}>
+          {!isMobile && (
             <span style={{
               fontSize:      '9px',
               letterSpacing: '0.05em',
@@ -261,48 +264,50 @@ export default function VideoPlayer({ src }) {
             }}>
               {fmt(current)} / {fmt(duration)}
             </span>
+          )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <button
-                onClick={toggleMute}
-                style={{
-                  background: 'none',
-                  border:     'none',
-                  padding:    0,
-                  cursor:     'pointer',
-                  color:      'var(--text)',
-                  display:    'flex',
-                  alignItems: 'center',
-                  opacity:    0.85,
-                  flexShrink: 0,
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '0.85'}
-              >
-                {muted ? <IconMuted /> : <IconUnmuted />}
-              </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={toggleMute}
+              style={{
+                background:  'none',
+                border:      'none',
+                padding:     isMobile ? '4px' : 0,
+                cursor:      'pointer',
+                color:       'var(--text)',
+                display:     'flex',
+                alignItems:  'center',
+                opacity:     0.85,
+                flexShrink:  0,
+                touchAction: 'manipulation',
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '0.85'}
+            >
+              {muted ? <IconMuted /> : <IconUnmuted />}
+            </button>
 
-              <button
-                onClick={toggleFullscreen}
-                style={{
-                  background: 'none',
-                  border:     'none',
-                  padding:    0,
-                  cursor:     'pointer',
-                  color:      'var(--text)',
-                  display:    'flex',
-                  alignItems: 'center',
-                  opacity:    0.85,
-                  flexShrink: 0,
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '0.85'}
-              >
-                <IconFullscreen />
-              </button>
-            </div>
+            <button
+              onClick={toggleFullscreen}
+              style={{
+                background:  'none',
+                border:      'none',
+                padding:     isMobile ? '4px' : 0,
+                cursor:      'pointer',
+                color:       'var(--text)',
+                display:     'flex',
+                alignItems:  'center',
+                opacity:     0.85,
+                flexShrink:  0,
+                touchAction: 'manipulation',
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '0.85'}
+            >
+              <IconFullscreen />
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
