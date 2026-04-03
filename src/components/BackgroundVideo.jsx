@@ -1,11 +1,6 @@
 export default function BackgroundVideo() {
   return (
     <>
-      <style>{`
-        @media (max-width: 768px) {
-          .bg-video { display: none; }
-        }
-      `}</style>
       <video
         className="bg-video"
         style={{

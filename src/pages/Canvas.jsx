@@ -109,74 +109,83 @@ function getInitialLayouts(canvasW, canvasH) {
   });
 }
 
-// Mobile size tiers: 35–55% of vw wide, varied aspect ratios
+// Mobile size tiers: sized to fit comfortably in a 4-col grid
 const MOBILE_SIZE_TIERS = [
-  { wFrac: [0.35, 0.42], ar: [0.72, 1.05] }, // small
-  { wFrac: [0.35, 0.42], ar: [0.72, 1.05] }, // small (extra weight)
-  { wFrac: [0.42, 0.50], ar: [0.65, 0.90] }, // medium-small
-  { wFrac: [0.42, 0.50], ar: [0.65, 0.90] }, // medium-small (extra weight)
-  { wFrac: [0.50, 0.57], ar: [0.60, 0.82] }, // medium
+  { w: [42,  58], h: [34, 48] }, // small
+  { w: [42,  58], h: [34, 48] }, // small (extra weight)
+  { w: [58,  80], h: [48, 68] }, // medium-small
+  { w: [58,  80], h: [48, 68] }, // medium-small (extra weight)
+  { w: [80, 105], h: [68, 90] }, // medium
 ];
 
-function getMobileLayouts(vw) {
+const MOBILE_INSTANCES = 3; // 3 × 6 projects = 18 panels
+
+function getMobileLayouts(vw, vh) {
   const slots = [];
   CANVAS_PROJECTS.forEach((project) => {
-    for (let i = 0; i < INSTANCES_PER_PROJECT; i++) {
+    for (let i = 0; i < MOBILE_INSTANCES; i++) {
       slots.push({ projectId: project.id, instanceIdx: i });
     }
   });
   slots.sort(() => Math.random() - 0.5);
 
-  const SIDE = 8;   // min distance from either edge
-  const TPAD = 88;  // clear nav/logo
-  const layouts = [];
+  const count  = slots.length; // 18
+  const zOrder = Array.from({ length: count }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
 
-  // Zone-based scatter: 2–4 panels share a vertical band, each at a random
-  // x and y-offset within the band → looks like shuffled cards, not a grid.
-  let zoneTop = TPAD;
-  let i       = 0;
+  const NAV_CLEAR = 88;
+  const MARGIN    = 10;
+  const gridLeft  = MARGIN;
+  const gridTop   = NAV_CLEAR;
+  const gridW     = vw - MARGIN * 2;
+  const gridH     = vh * 0.95 - gridTop;
 
-  while (i < slots.length) {
-    const batchSize = Math.min(2 + Math.floor(Math.random() * 3), slots.length - i);
-    let zoneH = 0;
+  // 4 cols × 5 rows = 20 cells; 18 panels fill 18 of them —
+  // 2 random cells stay empty so the edges aren't a perfect rectangle
+  const COLS  = 4;
+  const ROWS  = 5;
+  const cellW = gridW / COLS;
+  const cellH = gridH / ROWS;
 
-    for (let b = 0; b < batchSize; b++) {
-      const { projectId, instanceIdx } = slots[i + b];
-      const globalIdx = i + b;
+  const MIN_GAP = 3;
+  const placed  = [];
 
-      const tier  = MOBILE_SIZE_TIERS[Math.floor(Math.random() * MOBILE_SIZE_TIERS.length)];
-      const wFrac = tier.wFrac[0] + Math.random() * (tier.wFrac[1] - tier.wFrac[0]);
-      const w     = Math.round(wFrac * vw);
-      const ar    = tier.ar[0]  + Math.random() * (tier.ar[1]  - tier.ar[0]);
-      const h     = Math.round(w * ar);
+  const allCells  = Array.from({ length: COLS * ROWS }, (_, i) => i);
+  allCells.sort(() => Math.random() - 0.5);
+  const usedCells = allCells.slice(0, count).sort(() => Math.random() - 0.5);
 
-      // x: fully random — no columns, no alignment whatsoever
-      const x = Math.round(SIDE + Math.random() * Math.max(0, vw - SIDE * 2 - w));
+  return slots.map(({ projectId, instanceIdx }, i) => {
+    const tier = MOBILE_SIZE_TIERS[Math.floor(Math.random() * MOBILE_SIZE_TIERS.length)];
+    const w    = Math.floor(tier.w[0] + Math.random() * (tier.w[1] - tier.w[0]));
+    const h    = Math.floor(tier.h[0] + Math.random() * (tier.h[1] - tier.h[0]));
 
-      // y: random stagger within zone so panels in the same batch sit at different heights
-      const yStagger = Math.round(Math.random() * 55);
-      const y        = zoneTop + yStagger;
+    const cellIdx = usedCells[i];
+    const col     = cellIdx % COLS;
+    const row     = Math.floor(cellIdx / COLS);
+    const baseCX  = gridLeft + col * cellW + cellW / 2 - w / 2;
+    const baseCY  = gridTop  + row * cellH + cellH / 2 - h / 2;
 
-      zoneH = Math.max(zoneH, yStagger + h);
-
-      // Depth: random, z-index banded so back < mid < front visually
-      const dr    = Math.random();
-      const depth = dr < 0.30 ? 'back' : dr < 0.65 ? 'mid' : 'front';
-      const z     = depth === 'back' ? Math.floor(Math.random() * 10) +  1
-                  : depth === 'mid'  ? Math.floor(Math.random() * 10) + 11
-                  :                    Math.floor(Math.random() * 10) + 21;
-
-      const crop = CROP_POSITIONS[(instanceIdx * 3 + globalIdx) % CROP_POSITIONS.length];
-
-      layouts.push({ key: `${projectId}-${instanceIdx}`, id: projectId, x, y, w, h, z, depth, crop });
+    let x = Math.round(baseCX), y = Math.round(baseCY);
+    for (let attempt = 0; attempt < 40; attempt++) {
+      const jx = (Math.random() - 0.5) * cellW * 0.45;
+      const jy = (Math.random() - 0.5) * cellH * 0.45;
+      const cx = Math.max(gridLeft, Math.min(Math.round(baseCX + jx), gridLeft + gridW - w));
+      const cy = Math.max(gridTop,  Math.min(Math.round(baseCY + jy), gridTop  + gridH - h));
+      const ok = placed.every(p =>
+        cx + w + MIN_GAP <= p.x ||
+        cx >= p.x + p.w + MIN_GAP ||
+        cy + h + MIN_GAP <= p.y ||
+        cy >= p.y + p.h + MIN_GAP
+      );
+      x = cx; y = cy;
+      if (ok) break;
     }
+    placed.push({ x, y, w, h });
 
-    // Advance zone — 15–30% of zone height overlaps the next zone
-    zoneTop += Math.round(zoneH * (0.70 + Math.random() * 0.15));
-    i       += batchSize;
-  }
-
-  return layouts;
+    const z     = zOrder[i];
+    const depth = z <= count / 3 ? 'back' : z <= (count * 2) / 3 ? 'mid' : 'front';
+    const crop  = CROP_POSITIONS[(instanceIdx * 3 + i) % CROP_POSITIONS.length];
+    return { key: `${projectId}-${instanceIdx}`, id: projectId, x, y, w, h, z, depth, crop };
+  });
 }
 
 // Parallax magnitude (pixels) per depth layer — back barely drifts, front shifts noticeably
@@ -268,7 +277,7 @@ export default function Canvas() {
   const canvasH = Math.floor(viewH * CANVAS_H_MULT);
 
   const [desktopLayouts, setDesktopLayouts] = useState(() => getInitialLayouts(canvasW, canvasH));
-  const [mobileLayouts] = useState(() => getMobileLayouts(vw));
+  const [mobileLayouts] = useState(() => getMobileLayouts(vw, vh));
   const maxZ = useRef(desktopLayouts.reduce((m, l) => Math.max(m, l.z), 0));
 
   // Pan starts at origin — the dense cluster is already in the viewport
@@ -383,13 +392,7 @@ export default function Canvas() {
   const handleMobilePanelClick = useCallback((panelKey) => {
     const layout = mobileLayouts.find((l) => l.key === panelKey);
     if (!layout) return;
-    const scrollTop = mobileScrollRef.current ? mobileScrollRef.current.scrollTop : 0;
-    setExpandedSourceRect({
-      x: layout.x,
-      y: layout.y - scrollTop,
-      w: layout.w,
-      h: layout.h,
-    });
+    setExpandedSourceRect({ x: layout.x, y: layout.y, w: layout.w, h: layout.h });
     setExpandedId(layout.id);
   }, [mobileLayouts]);
 
@@ -402,19 +405,10 @@ export default function Canvas() {
 
   // ── Mobile render ──────────────────────────────────────────────────────────
   if (isMobile) {
-    const mobileCanvasH = mobileLayouts.reduce((m, l) => Math.max(m, l.y + l.h), 0) + 60;
     return (
-      <div
-        ref={mobileScrollRef}
-        style={{
-          position:   'fixed',
-          inset:      0,
-          overflowY:  'auto',
-          overflowX:  'hidden',
-          WebkitOverflowScrolling: 'touch',
-        }}
-      >
-        <div style={{ position: 'relative', width: '100%', height: mobileCanvasH }}>
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
+        <BackgroundVideo />
+        <div style={{ position: 'absolute', inset: 0 }}>
           {mobileLayouts.map((layout) => {
             const project = projects.find((p) => p.id === layout.id);
             if (!project) return null;
