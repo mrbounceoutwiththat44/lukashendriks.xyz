@@ -109,6 +109,15 @@ function getInitialLayouts(canvasW, canvasH) {
   });
 }
 
+// Mobile size tiers: 35–55% of vw wide, varied aspect ratios
+const MOBILE_SIZE_TIERS = [
+  { wFrac: [0.35, 0.42], ar: [0.72, 1.05] }, // small
+  { wFrac: [0.35, 0.42], ar: [0.72, 1.05] }, // small (extra weight)
+  { wFrac: [0.42, 0.50], ar: [0.65, 0.90] }, // medium-small
+  { wFrac: [0.42, 0.50], ar: [0.65, 0.90] }, // medium-small (extra weight)
+  { wFrac: [0.50, 0.57], ar: [0.60, 0.82] }, // medium
+];
+
 function getMobileLayouts(vw) {
   const slots = [];
   CANVAS_PROJECTS.forEach((project) => {
@@ -118,41 +127,56 @@ function getMobileLayouts(vw) {
   });
   slots.sort(() => Math.random() - 0.5);
 
-  const GAP     = 8;
-  const TOP_PAD = 88; // clear fixed logo/nav
-  const COL_W   = Math.floor((vw - GAP * 3) / 2);
-  const col0X   = GAP;
-  const col1X   = GAP * 2 + COL_W;
-  const colTops = [TOP_PAD, TOP_PAD];
+  const SIDE = 8;   // min distance from either edge
+  const TPAD = 88;  // clear nav/logo
+  const layouts = [];
 
-  return slots.map(({ projectId, instanceIdx }, i) => {
-    // Place into shorter column
-    const col    = colTops[0] <= colTops[1] ? 0 : 1;
-    const baseX  = col === 0 ? col0X : col1X;
+  // Zone-based scatter: 2–4 panels share a vertical band, each at a random
+  // x and y-offset within the band → looks like shuffled cards, not a grid.
+  let zoneTop = TPAD;
+  let i       = 0;
 
-    // Slight horizontal stagger for organic feel (can overlap neighbor a little)
-    const stagger = Math.round((Math.random() - 0.5) * 12);
-    const x = Math.max(0, Math.min(baseX + stagger, vw - COL_W));
+  while (i < slots.length) {
+    const batchSize = Math.min(2 + Math.floor(Math.random() * 3), slots.length - i);
+    let zoneH = 0;
 
-    // Random aspect ratio between 0.6 and 1.1
-    const aspectRatio = 0.6 + Math.random() * 0.5;
-    const w = COL_W;
-    const h = Math.round(w * aspectRatio);
-    const y = colTops[col];
+    for (let b = 0; b < batchSize; b++) {
+      const { projectId, instanceIdx } = slots[i + b];
+      const globalIdx = i + b;
 
-    colTops[col] += h + GAP;
+      const tier  = MOBILE_SIZE_TIERS[Math.floor(Math.random() * MOBILE_SIZE_TIERS.length)];
+      const wFrac = tier.wFrac[0] + Math.random() * (tier.wFrac[1] - tier.wFrac[0]);
+      const w     = Math.round(wFrac * vw);
+      const ar    = tier.ar[0]  + Math.random() * (tier.ar[1]  - tier.ar[0]);
+      const h     = Math.round(w * ar);
 
-    const z     = i + 1;
-    const tier  = i % 3;
-    const depth = tier === 0 ? 'back' : tier === 1 ? 'mid' : 'front';
-    const crop  = CROP_POSITIONS[(instanceIdx * 3 + i) % CROP_POSITIONS.length];
+      // x: fully random — no columns, no alignment whatsoever
+      const x = Math.round(SIDE + Math.random() * Math.max(0, vw - SIDE * 2 - w));
 
-    return {
-      key: `${projectId}-${instanceIdx}`,
-      id: projectId,
-      x, y, w, h, z, depth, crop,
-    };
-  });
+      // y: random stagger within zone so panels in the same batch sit at different heights
+      const yStagger = Math.round(Math.random() * 55);
+      const y        = zoneTop + yStagger;
+
+      zoneH = Math.max(zoneH, yStagger + h);
+
+      // Depth: random, z-index banded so back < mid < front visually
+      const dr    = Math.random();
+      const depth = dr < 0.30 ? 'back' : dr < 0.65 ? 'mid' : 'front';
+      const z     = depth === 'back' ? Math.floor(Math.random() * 10) +  1
+                  : depth === 'mid'  ? Math.floor(Math.random() * 10) + 11
+                  :                    Math.floor(Math.random() * 10) + 21;
+
+      const crop = CROP_POSITIONS[(instanceIdx * 3 + globalIdx) % CROP_POSITIONS.length];
+
+      layouts.push({ key: `${projectId}-${instanceIdx}`, id: projectId, x, y, w, h, z, depth, crop });
+    }
+
+    // Advance zone — 15–30% of zone height overlaps the next zone
+    zoneTop += Math.round(zoneH * (0.70 + Math.random() * 0.15));
+    i       += batchSize;
+  }
+
+  return layouts;
 }
 
 // Parallax magnitude (pixels) per depth layer — back barely drifts, front shifts noticeably
