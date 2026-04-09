@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect, forwardRef, useImperativeHandle, memo } from 'react';
+import Img from './Img';
 
 // TITLEBAR_H is now computed per-panel from width — see inside component
 const DRAG_THRESH  = 5;
@@ -189,8 +190,7 @@ const Panel = forwardRef(function Panel({
   const fontSize  = Math.max(5,  Math.min(8,  Math.round(width * 0.07)));
   const btnSize   = Math.max(4,  Math.min(7,  Math.round(width * 0.06)));
 
-  const isMoving   = isDragging || isInertia;
-  // During drag/inertia: full front-layer treatment. Otherwise: assigned depth layer.
+  const isMoving    = isDragging || isInertia;
   const activeDepth = isMoving ? 'front' : (depth || 'mid');
   const ds          = DEPTH_STYLE[activeDepth];
   const opacity     = isDimmed ? 0.2 : ds.opacity;
@@ -209,9 +209,7 @@ const Panel = forwardRef(function Panel({
         height,
         zIndex,
         border:               'none',
-        background:           'rgba(10,10,10,0.4)',
-        backdropFilter:       'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        background:           'rgba(12,12,12,0.88)',
         opacity,
         filter:               ds.filter,
         boxShadow:            ds.boxShadow,
@@ -254,7 +252,7 @@ const Panel = forwardRef(function Panel({
         justifyContent: 'center',
       }}>
         {project.thumbnail ? (
-          <img
+          <Img
             src={project.thumbnail}
             alt={project.title}
             draggable={false}

@@ -3,6 +3,7 @@ import { projects } from '../data/projects';
 import Panel from '../components/Panel';
 import ExpandedPanel from '../components/ExpandedPanel';
 import BackgroundVideo from '../components/BackgroundVideo';
+import Img from '../components/Img';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 // Canvas = viewport — all panels visible without scrolling
@@ -204,15 +205,13 @@ function MobilePanel({ layout, project, isDimmed, onClick }) {
     <div
       onClick={() => onClick(layout.key)}
       style={{
-        position:             'absolute',
-        left:                 layout.x,
-        top:                  layout.y,
-        width:                layout.w,
-        height:               layout.h,
-        zIndex:               layout.z,
-        background:           'rgba(10,10,10,0.4)',
-        backdropFilter:       'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        position:   'absolute',
+        left:       layout.x,
+        top:        layout.y,
+        width:      layout.w,
+        height:     layout.h,
+        zIndex:     layout.z,
+        background: 'rgba(12,12,12,0.88)',
         opacity:              isDimmed ? 0.2 : ds.opacity,
         filter:               ds.filter,
         display:              'flex',
@@ -236,7 +235,7 @@ function MobilePanel({ layout, project, isDimmed, onClick }) {
       </div>
       <div style={{ flex: 1, overflow: 'hidden' }}>
         {project.thumbnail ? (
-          <img
+          <Img
             src={project.thumbnail}
             alt={project.title}
             draggable={false}
@@ -290,7 +289,12 @@ export default function Canvas() {
 
   // Keep a ref to layouts so callbacks don't need layouts in their dep arrays
   const layoutsRef = useRef(desktopLayouts);
-  useEffect(() => { layoutsRef.current = desktopLayouts; }, [desktopLayouts]);
+  // Map for O(1) parallax lookups instead of O(n) .find() per panel per frame
+  const layoutMapRef = useRef(new Map(desktopLayouts.map(l => [l.key, l])));
+  useEffect(() => {
+    layoutsRef.current = desktopLayouts;
+    layoutMapRef.current = new Map(desktopLayouts.map(l => [l.key, l]));
+  }, [desktopLayouts]);
 
   // Parallax — mouse position tracked in refs, applied via imperative DOM writes
   const mouseTarget  = useRef({ x: 0, y: 0 });
@@ -317,7 +321,7 @@ export default function Canvas() {
         mouseCurrent.current = { x: nx, y: ny };
         // Push parallax directly to each panel — no React state, no re-renders
         panelHandles.current.forEach((handle, key) => {
-          const layout = layoutsRef.current.find((l) => l.key === key);
+          const layout = layoutMapRef.current.get(key);
           if (!layout) return;
           const factor = DEPTH_PARALLAX[layout.depth] ?? DEPTH_PARALLAX.mid;
           handle.setParallax(nx * factor, ny * factor);

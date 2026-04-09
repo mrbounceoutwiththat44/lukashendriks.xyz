@@ -1,107 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import VideoPlayer from './VideoPlayer';
+import Img from './Img';
 import { useIsMobile } from '../hooks/useIsMobile';
 
-// Cursor-hiding hover overlay — rAF lerp for smooth GPU-composited movement
 const OVERLAY_LERP = 0.18;
-
-function GalleryItem({ src, projectTitle, children }) {
-  const containerRef = useRef(null);
-  const overlayRef   = useRef(null);
-  const targetRef    = useRef({ x: 0, y: 0 });
-  const currentRef   = useRef({ x: 0, y: 0 });
-  const rafRef       = useRef(null);
-  const [visible, setVisible] = useState(false);
-
-  const filename = src.split('/').pop().replace(/\.[^.]+$/, '');
-
-  const clamp = useCallback((lx, ly) => {
-    const rect = containerRef.current.getBoundingClientRect();
-    return {
-      x: Math.max(0, Math.min(lx + 16, rect.width  - 160)),
-      y: Math.max(0, Math.min(ly + 16, rect.height -  36)),
-    };
-  }, []);
-
-  const stopRaf = useCallback(() => {
-    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-  }, []);
-
-  const startRaf = useCallback(() => {
-    const tick = () => {
-      const cur = currentRef.current;
-      const tgt = targetRef.current;
-      const nx = cur.x + (tgt.x - cur.x) * OVERLAY_LERP;
-      const ny = cur.y + (tgt.y - cur.y) * OVERLAY_LERP;
-      currentRef.current = { x: nx, y: ny };
-      if (overlayRef.current) {
-        overlayRef.current.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  }, []);
-
-  const onMouseEnter = useCallback((e) => {
-    const rect = containerRef.current.getBoundingClientRect();
-    const snapped = clamp(e.clientX - rect.left, e.clientY - rect.top);
-    // Snap current to cursor so overlay appears exactly at cursor, then lerp from there
-    targetRef.current  = snapped;
-    currentRef.current = snapped;
-    setVisible(true);
-    startRaf();
-  }, [clamp, startRaf]);
-
-  const onMouseMove = useCallback((e) => {
-    const rect = containerRef.current.getBoundingClientRect();
-    targetRef.current = clamp(e.clientX - rect.left, e.clientY - rect.top);
-  }, [clamp]);
-
-  const onMouseLeave = useCallback(() => {
-    stopRaf();
-    setVisible(false);
-  }, [stopRaf]);
-
-  useEffect(() => () => stopRaf(), [stopRaf]);
-
-  return (
-    <div
-      ref={containerRef}
-      onMouseEnter={onMouseEnter}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-      style={{ position: 'relative', height: '100%', flexShrink: 0, cursor: 'none' }}
-    >
-      {children}
-      {visible && (
-        <div
-          ref={overlayRef}
-          style={{
-            position:      'absolute',
-            left:          0,
-            top:           0,
-            transform:     `translate3d(${currentRef.current.x}px, ${currentRef.current.y}px, 0)`,
-            willChange:    'transform',
-            pointerEvents: 'none',
-            color:         '#FF0051',
-            fontFamily:    "'Helvetica Neue', Helvetica, Arial, sans-serif",
-            fontSize:      '12px',
-            lineHeight:    1.4,
-            whiteSpace:    'nowrap',
-            zIndex:        10,
-          }}
-        >
-          <div>{projectTitle}</div>
-          <div>{filename}</div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-const TITLEBAR_H  = 28;
-const META_H      = 148;
-const GALLERY_GAP = 2;
+const TITLEBAR_H   = 28;
+const META_H       = 148;
 
 export default function ExpandedPanel({ project, sourceRect, onClose }) {
   const isMobile = useIsMobile();
@@ -117,14 +21,14 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
   const tx = Math.floor((vw - tw) / 2);
   const ty = Math.floor((vh - th) / 2);
 
-  // Scale+translate from the source panel to the expanded rect
+  // Scale+translate from source panel to expanded rect
   const dx     = (sourceRect.x + sourceRect.w / 2) - (tx + tw / 2);
   const dy     = (sourceRect.y + sourceRect.h / 2) - (ty + th / 2);
   const scaleX = sourceRect.w / tw;
   const scaleY = sourceRect.h / th;
   const collapsedTransform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
 
-  // Double-rAF so the first render lands at collapsed, second triggers the transition
+  // Double-rAF so first render lands at collapsed, second triggers the transition
   useEffect(() => {
     const id = requestAnimationFrame(() =>
       requestAnimationFrame(() => setPhase('open'))
@@ -154,18 +58,99 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
       ? 'transform 240ms ease-out, opacity 240ms ease-out'
       : 'none';
 
-  // ── Desktop horizontal gallery scroll ─────────────────────────────────────
-  const galleryRef = useRef(null);
-  const dragRef    = useRef(null);
+  // ── Desktop gallery — unified mouse tracking ───────────────────────────────
+  const galleryRef     = useRef(null);
+  const dragRef        = useRef(null);
+  const overlayRef     = useRef(null);
+  const overlayTarget  = useRef({ x: 0, y: 0 });
+  const overlayCurrent = useRef({ x: 0, y: 0 });
+  const overlayRafRef  = useRef(null);
+  // Each entry: { el: DOMNode, title: string, filename: string }
+  const itemInfoRef    = useRef([]);
+  const lastItemIdx    = useRef(-1);
+  const [labelVisible, setLabelVisible] = useState(false);
+  const [labelText,    setLabelText]    = useState({ title: '', filename: '' });
+
+  const stopOverlayRaf = useCallback(() => {
+    if (overlayRafRef.current) { cancelAnimationFrame(overlayRafRef.current); overlayRafRef.current = null; }
+  }, []);
+
+  useEffect(() => () => stopOverlayRaf(), [stopOverlayRaf]);
+
+  const startOverlayRaf = useCallback(() => {
+    const tick = () => {
+      const cur = overlayCurrent.current;
+      const tgt = overlayTarget.current;
+      const nx = cur.x + (tgt.x - cur.x) * OVERLAY_LERP;
+      const ny = cur.y + (tgt.y - cur.y) * OVERLAY_LERP;
+      overlayCurrent.current = { x: nx, y: ny };
+      if (overlayRef.current) {
+        overlayRef.current.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
+      }
+      overlayRafRef.current = requestAnimationFrame(tick);
+    };
+    overlayRafRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const clampToGallery = useCallback((lx, ly) => {
+    const rect = galleryRef.current.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(lx + 16, rect.width  - 160)),
+      y: Math.max(0, Math.min(ly + 16, rect.height -  36)),
+    };
+  }, []);
+
+  // Shared item detection — call from both mouseenter and mousemove
+  const detectItem = useCallback((clientX) => {
+    const items = itemInfoRef.current;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item?.el) continue;
+      const ir = item.el.getBoundingClientRect();
+      if (clientX >= ir.left && clientX < ir.right) {
+        // Only trigger a re-render when crossing into a different item
+        if (i !== lastItemIdx.current) {
+          lastItemIdx.current = i;
+          setLabelText({ title: item.title, filename: item.filename });
+        }
+        return;
+      }
+    }
+  }, []);
+
+  const onGalleryMouseEnter = useCallback((e) => {
+    const rect = galleryRef.current.getBoundingClientRect();
+    const snap = clampToGallery(e.clientX - rect.left, e.clientY - rect.top);
+    overlayCurrent.current = snap;
+    overlayTarget.current  = snap;
+    lastItemIdx.current    = -1; // force text update on first enter
+    detectItem(e.clientX);
+    setLabelVisible(true);
+    startOverlayRaf();
+  }, [clampToGallery, detectItem, startOverlayRaf]);
+
+  const onGalleryMouseLeave = useCallback(() => {
+    stopOverlayRaf();
+    setLabelVisible(false);
+    lastItemIdx.current = -1;
+  }, [stopOverlayRaf]);
+
+  const onGalleryMouseMove = useCallback((e) => {
+    const rect = galleryRef.current.getBoundingClientRect();
+    overlayTarget.current = clampToGallery(e.clientX - rect.left, e.clientY - rect.top);
+    detectItem(e.clientX);
+  }, [clampToGallery, detectItem]);
 
   const onGalleryWheel = useCallback((e) => {
     e.preventDefault();
     if (galleryRef.current) galleryRef.current.scrollLeft += e.deltaY + e.deltaX;
   }, []);
 
+  // Drag cursor flipped imperatively — avoids a React re-render per drag start/end
   const onGalleryMouseDown = useCallback((e) => {
     if (e.button !== 0) return;
     e.stopPropagation();
+    if (galleryRef.current) galleryRef.current.style.cursor = 'grabbing';
     dragRef.current = { startX: e.clientX, scrollLeft: galleryRef.current.scrollLeft };
     const onMove = (mv) => {
       if (!dragRef.current) return;
@@ -173,6 +158,7 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
     };
     const onUp = () => {
       dragRef.current = null;
+      if (galleryRef.current) galleryRef.current.style.cursor = 'none';
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
@@ -181,18 +167,14 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
   }, []);
 
   const galleryH = th - TITLEBAR_H - META_H;
-
-  const images = project.images && project.images.length > 0
-    ? project.images
-    : project.thumbnail ? [project.thumbnail] : [];
-  const videos = project.videos || [];
+  const images   = project.images?.length > 0 ? project.images : (project.thumbnail ? [project.thumbnail] : []);
+  const videos   = project.videos || [];
   const hasMedia = images.length > 0 || videos.length > 0;
 
   // ── Mobile layout ──────────────────────────────────────────────────────────
   if (isMobile) {
     return (
       <>
-        {/* Scrim — invisible on mobile (panel is full-screen) but handles backdrop */}
         <div
           style={{
             position:   'fixed',
@@ -203,34 +185,31 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
             transition: isClosing ? 'opacity 240ms ease-in' : isOpen ? 'opacity 240ms ease-out' : 'none',
           }}
         />
-
-        {/* Centered card */}
         <div
           onTransitionEnd={(e) => {
             if (e.propertyName === 'transform' && phase === 'open') setContentVisible(true);
           }}
           style={{
-            position:        'fixed',
-            left:            tx,
-            top:             ty,
-            width:           tw,
-            height:          th,
-            zIndex:          2001,
-            background:      'rgba(10,10,10,0.92)',
-            backdropFilter:  'blur(16px)',
+            position:             'fixed',
+            left:                 tx,
+            top:                  ty,
+            width:                tw,
+            height:               th,
+            zIndex:               2001,
+            background:           'rgba(10,10,10,0.92)',
+            backdropFilter:       'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
-            border:          '1px solid var(--panel-border)',
-            display:         'flex',
-            flexDirection:   'column',
-            overflow:        'hidden',
-            transform:       panelTransform,
-            transformOrigin: 'center center',
-            opacity:         phase === 'entering' ? 0 : 1,
-            transition:      panelTransition,
-            willChange:      'transform, opacity',
+            border:               '1px solid var(--panel-border)',
+            display:              'flex',
+            flexDirection:        'column',
+            overflow:             'hidden',
+            transform:            panelTransform,
+            transformOrigin:      'center center',
+            opacity:              phase === 'entering' ? 0 : 1,
+            transition:           panelTransition,
+            willChange:           'transform, opacity',
           }}
         >
-          {/* Title bar */}
           <div style={{
             height:         TITLEBAR_H,
             minHeight:      TITLEBAR_H,
@@ -262,27 +241,19 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
                 lineHeight:     1,
                 touchAction:    'manipulation',
               }}
-            >
-              ×
-            </button>
+            >×</button>
           </div>
-
-          {/* Scrollable content — fades in after expand animation */}
           <div
             style={{
-              flex:      1,
-              overflowY: 'auto',
-              overflowX: 'hidden',
+              flex:                    1,
+              overflowY:               'auto',
+              overflowX:               'hidden',
               WebkitOverflowScrolling: 'touch',
-              opacity:    contentVisible ? 1 : 0,
-              transition: contentVisible ? 'opacity 0.18s ease' : 'none',
+              opacity:                 contentVisible ? 1 : 0,
+              transition:              contentVisible ? 'opacity 0.18s ease' : 'none',
             }}
           >
-            {/* Meta */}
-            <div style={{
-              padding:      '20px 16px 16px',
-              borderBottom: '1px solid var(--panel-border)',
-            }}>
+            <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--panel-border)' }}>
               <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>
                 {project.title}
               </div>
@@ -291,28 +262,22 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
                   {val}
                 </div>
               ))}
-              {project.description ? (
-                <p style={{
-                  fontSize:      '12px',
-                  color:         'var(--text)',
-                  lineHeight:    1.75,
-                  margin:        '12px 0 0',
-                  letterSpacing: '-0.01em',
-                }}>
+              {project.description && (
+                <p style={{ fontSize: '12px', color: 'var(--text)', lineHeight: 1.75, margin: '12px 0 0', letterSpacing: '-0.01em' }}>
                   {project.description}
                 </p>
-              ) : null}
+              )}
             </div>
-
-            {/* Media — stacked full-width */}
             {hasMedia && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 0 20px' }}>
                 {images.map((src, i) => (
-                  <img
+                  <Img
                     key={`img-${i}`}
                     src={src}
                     alt=""
                     draggable={false}
+                    loading="lazy"
+                    decoding="async"
                     style={{ width: '100%', display: 'block', objectFit: 'cover' }}
                   />
                 ))}
@@ -344,30 +309,30 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
         }}
       />
 
-      {/* Floating panel — always rendered at final rect, moved via transform */}
+      {/* Floating panel */}
       <div
         onTransitionEnd={(e) => {
           if (e.propertyName === 'transform' && phase === 'open') setContentVisible(true);
         }}
         style={{
-          position:        'fixed',
-          left:            tx,
-          top:             ty,
-          width:           tw,
-          height:          th,
-          zIndex:          2001,
-          background:      'rgba(10,10,10,0.5)',
-          backdropFilter:  'blur(16px)',
+          position:             'fixed',
+          left:                 tx,
+          top:                  ty,
+          width:                tw,
+          height:               th,
+          zIndex:               2001,
+          background:           'rgba(10,10,10,0.5)',
+          backdropFilter:       'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          border:          '1px solid var(--panel-border)',
-          display:         'flex',
-          flexDirection:   'column',
-          overflow:        'hidden',
-          transform:       panelTransform,
-          transformOrigin: 'center center',
-          opacity:         phase === 'entering' ? 0 : 1,
-          transition:      panelTransition,
-          willChange:      'transform, opacity',
+          border:               '1px solid var(--panel-border)',
+          display:              'flex',
+          flexDirection:        'column',
+          overflow:             'hidden',
+          transform:            panelTransform,
+          transformOrigin:      'center center',
+          opacity:              phase === 'entering' ? 0 : 1,
+          transition:           panelTransition,
+          willChange:           'transform, opacity',
         }}
       >
         {/* Title bar */}
@@ -403,75 +368,118 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
             }}
             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
             onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--panel-border)'}
-          >
-            ×
-          </button>
+          >×</button>
         </div>
 
-        {/* Content — fades in after expand animation completes */}
+        {/* Content */}
         <div
           style={{
-            flex:       1,
-            display:    'flex',
+            flex:          1,
+            display:       'flex',
             flexDirection: 'column',
-            overflow:   'hidden',
-            opacity:    contentVisible ? 1 : 0,
-            transition: contentVisible ? 'opacity 0.18s ease' : 'none',
+            overflow:      'hidden',
+            opacity:       contentVisible ? 1 : 0,
+            transition:    contentVisible ? 'opacity 0.18s ease' : 'none',
           }}
         >
-          {/* Horizontal image gallery */}
-          <div
-            ref={galleryRef}
-            className="gallery-scroll"
-            onWheel={onGalleryWheel}
-            onMouseDown={onGalleryMouseDown}
-            style={{
-              height:          galleryH,
-              minHeight:       galleryH,
-              flexShrink:      0,
-              display:         'flex',
-              flexDirection:   'row',
-              alignItems:      'stretch',
-              gap:             GALLERY_GAP,
-              overflowX:       'scroll',
-              overflowY:       'hidden',
-              cursor:          'grab',
-              scrollbarWidth:  'none',
-              msOverflowStyle: 'none',
-            }}
-          >
-            {hasMedia ? (
-              <>
-                {images.map((src, i) => (
-                  <GalleryItem key={`img-${i}`} src={src} projectTitle={project.title}>
-                    <img
-                      src={src}
-                      alt=""
-                      draggable={false}
-                      style={{ height: '100%', width: 'auto', display: 'block', objectFit: 'cover', userSelect: 'none' }}
-                    />
-                  </GalleryItem>
-                ))}
-                {videos.map((v, i) => {
-                  const src = typeof v === 'string' ? v : v.src;
-                  return (
-                    <GalleryItem key={`vid-${i}`} src={src} projectTitle={project.title}>
-                      <VideoPlayer src={src} />
-                    </GalleryItem>
-                  );
-                })}
-              </>
-            ) : (
-              <div style={{
-                width:          '100%',
-                display:        'flex',
-                alignItems:     'center',
-                justifyContent: 'center',
-                fontSize:       '10px',
-                color:          'var(--panel-border)',
-                letterSpacing:  '0.05em',
-              }}>
-                No images
+          {/* Gallery wrapper — position:relative so the overlay is anchored to
+              the visible area, not the scroll content inside */}
+          <div style={{ position: 'relative', height: galleryH, minHeight: galleryH, flexShrink: 0 }}>
+            <div
+              ref={galleryRef}
+              className="gallery-scroll"
+              onWheel={onGalleryWheel}
+              onMouseDown={onGalleryMouseDown}
+              onMouseMove={onGalleryMouseMove}
+              onMouseEnter={onGalleryMouseEnter}
+              onMouseLeave={onGalleryMouseLeave}
+              style={{
+                position:        'absolute',
+                inset:           0,
+                display:         'flex',
+                flexDirection:   'row',
+                alignItems:      'stretch',
+                overflowX:       'scroll',
+                overflowY:       'hidden',
+                cursor:          'none',
+                scrollbarWidth:  'none',
+                msOverflowStyle: 'none',
+              }}
+            >
+              {hasMedia ? (
+                <>
+                  {images.map((src, i) => {
+                    const filename = src.split('/').pop().replace(/\.[^.]+$/, '');
+                    return (
+                      <div
+                        key={`img-${i}`}
+                        ref={el => { if (el) itemInfoRef.current[i] = { el, title: project.title, filename }; }}
+                        style={{ height: '100%', flexShrink: 0, overflow: 'hidden' }}
+                      >
+                        <Img
+                          src={src}
+                          alt=""
+                          draggable={false}
+                          loading="lazy"
+                          decoding="async"
+                          pictureStyle={{ display: 'block', height: '100%', width: 'max-content' }}
+                          style={{ height: '100%', width: 'auto', display: 'block', objectFit: 'cover', userSelect: 'none' }}
+                        />
+                      </div>
+                    );
+                  })}
+                  {videos.map((v, i) => {
+                    const src = typeof v === 'string' ? v : v.src;
+                    const filename = src.split('/').pop().replace(/\.[^.]+$/, '');
+                    const idx = images.length + i;
+                    return (
+                      <div
+                        key={`vid-${i}`}
+                        ref={el => { if (el) itemInfoRef.current[idx] = { el, title: project.title, filename }; }}
+                        style={{ height: '100%', flexShrink: 0, overflow: 'hidden' }}
+                      >
+                        <VideoPlayer src={src} />
+                      </div>
+                    );
+                  })}
+                </>
+              ) : (
+                <div style={{
+                  width:          '100%',
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  fontSize:       '10px',
+                  color:          'var(--panel-border)',
+                  letterSpacing:  '0.05em',
+                }}>
+                  No images
+                </div>
+              )}
+            </div>
+
+            {/* Single label — follows cursor, updates text when crossing items.
+                Anchored to the wrapper (not scroll content) so it never scrolls away. */}
+            {labelVisible && (
+              <div
+                ref={overlayRef}
+                style={{
+                  position:      'absolute',
+                  left:          0,
+                  top:           0,
+                  transform:     `translate3d(${overlayCurrent.current.x}px, ${overlayCurrent.current.y}px, 0)`,
+                  willChange:    'transform',
+                  pointerEvents: 'none',
+                  color:         '#FF0051',
+                  fontFamily:    "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                  fontSize:      '12px',
+                  lineHeight:    1.4,
+                  whiteSpace:    'nowrap',
+                  zIndex:        10,
+                }}
+              >
+                <div>{labelText.title}</div>
+                <div>{labelText.filename}</div>
               </div>
             )}
           </div>
@@ -485,7 +493,6 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
             flexDirection: 'row',
             borderTop:     '1px solid var(--panel-border)',
           }}>
-            {/* Left: metadata list */}
             <div style={{
               width:         220,
               minWidth:      220,
@@ -504,16 +511,8 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
                 </div>
               ))}
             </div>
-
-            {/* Right: description */}
             <div style={{ flex: 1, padding: '18px 24px', display: 'flex', alignItems: 'flex-start' }}>
-              <p style={{
-                fontSize:      '11px',
-                color:         'var(--text)',
-                lineHeight:    1.75,
-                margin:        0,
-                letterSpacing: '-0.01em',
-              }}>
+              <p style={{ fontSize: '11px', color: 'var(--text)', lineHeight: 1.75, margin: 0, letterSpacing: '-0.01em' }}>
                 {project.description}
               </p>
             </div>
