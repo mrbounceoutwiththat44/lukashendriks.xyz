@@ -422,7 +422,6 @@ export default function ExpandedPanel({ project, sourceRect, onClose }) {
                           draggable={false}
                           loading="lazy"
                           decoding="async"
-                          pictureStyle={{ display: 'block', height: '100%', width: 'max-content' }}
                           style={{ height: '100%', width: 'auto', display: 'block', objectFit: 'cover', userSelect: 'none' }}
                         />
                       </div>

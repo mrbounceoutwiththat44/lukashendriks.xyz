@@ -20,7 +20,9 @@ export default function Img({ src, alt = '', pictureStyle, ...rest }) {
   return (
     <picture style={pictureStyle ?? { display: 'contents' }}>
       <source srcSet={`${optBase}.avif`} type="image/avif" />
-      <img src={`${optBase}.jpg`} alt={alt} {...rest} />
+      <source srcSet={`${optBase}.jpg`}  type="image/jpeg" />
+      {/* Original file as final fallback — layout never collapses if opt/ wasn't generated */}
+      <img src={src} alt={alt} {...rest} />
     </picture>
   );
 }
